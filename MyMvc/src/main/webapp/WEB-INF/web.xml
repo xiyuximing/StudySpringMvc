@@ -9,8 +9,8 @@
     <servlet-name>mymvc</servlet-name>
     <servlet-class>com.cy.mvcframework.servlet.MyDispatcherServlet</servlet-class>
     <init-param>
-      <param-name></param-name>
-      <param-value></param-value>
+      <param-name>contextConfigLocation</param-name>
+      <param-value>springmvc.properties</param-value>
     </init-param>
   </servlet>
   <servlet-mapping>
