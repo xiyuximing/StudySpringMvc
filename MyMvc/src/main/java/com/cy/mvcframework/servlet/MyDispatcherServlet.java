@@ -4,6 +4,8 @@ import com.cy.mvcframework.anno.MyAutowired;
 import com.cy.mvcframework.anno.MyController;
 import com.cy.mvcframework.anno.MyRequestMapping;
 import com.cy.mvcframework.anno.MyService;
+import com.cy.mvcframework.pojo.Handler;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -14,8 +16,11 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class MyDispatcherServlet extends HttpServlet {
 
@@ -28,7 +33,7 @@ public class MyDispatcherServlet extends HttpServlet {
 
     public Map<String, Object> ioc = new HashMap<>();
 
-    public Map<String, Method> handlerMapping = new HashMap<>();
+    public List<Handler> handlerMapping = new ArrayList<>();
     @Override
     public void init(ServletConfig config) throws ServletException {
         String contextConfigLocation = config.getInitParameter("contextConfigLocation");
@@ -65,7 +70,19 @@ public class MyDispatcherServlet extends HttpServlet {
                     continue;
                 }
                 String url = method.getAnnotation(MyRequestMapping.class).value();
-                handlerMapping.put(baseUrl + url, method);
+                url = baseUrl + url;
+                Handler handler = new Handler(method, entry.getValue(), Pattern.compile(url));
+                Parameter[] parameters = method.getParameters();
+                for (int i = 0; i < parameters.length; i++) {
+                    Parameter parameter = parameters[i];
+                    if (parameter.getType() == HttpServletRequest.class || parameter.getType()  == HttpServletResponse.class) {
+                        //为httpServletRequest及HttpServletResponse时，存入类型名称，方便后续处理
+                        handler.getParamterIndex().put(parameter.getClass().getSimpleName(), i);
+                    } else {
+                        handler.getParamterIndex().put(parameter.getName(), i);
+                    }
+                }
+                handlerMapping.add(handler);
             }
         }
 
@@ -155,11 +172,52 @@ public class MyDispatcherServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doGet(req, resp);
+        doPost(req, resp);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPost(req, resp);
+        Handler handler = getHandler(req);
+        if (handler == null) {
+            resp.getWriter().write("404");
+            return;
+        }
+        Method method = handler.getMethod();
+        Map<String, Integer> indexMap = handler.getParamterIndex();
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        Object[] args = new Object[parameterTypes.length];
+        Map<String, String[]> reqParamterMap = req.getParameterMap();
+        for (Map.Entry<String, String[]> reqParameter : reqParamterMap.entrySet()) {
+            if (indexMap.containsKey(reqParameter.getKey())) {
+                Integer index = indexMap.get(reqParameter.getKey());
+                Class<?> type = parameterTypes[index];
+                if (type == String.class) {
+                    args[index] = StringUtils.join(reqParameter.getValue(), ",");
+                }
+            }
+        }
+        if (indexMap.get(req.getClass().getSimpleName()) != null) {
+            args[indexMap.get(req.getClass().getSimpleName())] = req;
+        }
+        if (indexMap.get(resp.getClass().getSimpleName()) != null) {
+            args[indexMap.get(resp.getClass().getSimpleName())] = resp;
+        }
+        try {
+            method.invoke(handler.getController(), args);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Handler getHandler(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        for (Handler handler : handlerMapping) {
+            if (handler.getPattern().matcher(uri).find()) {
+                return handler;
+            }
+        }
+        return null;
     }
 }
