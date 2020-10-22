@@ -1,10 +1,9 @@
 package com.cy.mvcframework.servlet;
 
-import com.cy.mvcframework.anno.MyAutowired;
-import com.cy.mvcframework.anno.MyController;
-import com.cy.mvcframework.anno.MyRequestMapping;
-import com.cy.mvcframework.anno.MyService;
+import com.cy.mvcframework.anno.*;
+import com.cy.mvcframework.interceptor.MyInterceptor;
 import com.cy.mvcframework.pojo.Handler;
+import com.cy.mvcframework.pojo.HandlerExecutionChain;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.ServletConfig;
@@ -177,11 +176,15 @@ public class MyDispatcherServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Handler handler = getHandler(req);
-        if (handler == null) {
+        HandlerExecutionChain chain = getHandlerChain(req);
+        if (chain == null) {
             resp.getWriter().write("404");
             return;
         }
+        if (!chain.applyPreHandle(req,resp)) {
+            return;
+        }
+        Handler handler = chain.getHandler();
         Method method = handler.getMethod();
         Map<String, Integer> indexMap = handler.getParamterIndex();
         Class<?>[] parameterTypes = method.getParameterTypes();
@@ -211,13 +214,21 @@ public class MyDispatcherServlet extends HttpServlet {
         }
     }
 
-    private Handler getHandler(HttpServletRequest request) {
+    private HandlerExecutionChain getHandlerChain(HttpServletRequest request) {
         String uri = request.getRequestURI();
+        Handler ha = null;
         for (Handler handler : handlerMapping) {
             if (handler.getPattern().matcher(uri).find()) {
-                return handler;
+                ha = handler;
             }
         }
-        return null;
+        if (ha == null) {
+            return null;
+        }
+        HandlerExecutionChain chain = new HandlerExecutionChain(ha);
+        if (ha.getMethod().isAnnotationPresent(Security.class) || ha.getController().getClass().isAnnotationPresent(Security.class)) {
+            chain.addInterceptor((MyInterceptor)ioc.get("com.cy.mvcframework.interceptor.MyInterceptor"));
+        }
+        return chain;
     }
 }

@@ -4,12 +4,14 @@ import com.cy.demo.service.IDemoService;
 import com.cy.mvcframework.anno.MyAutowired;
 import com.cy.mvcframework.anno.MyController;
 import com.cy.mvcframework.anno.MyRequestMapping;
+import com.cy.mvcframework.anno.Security;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @MyController
 @MyRequestMapping("/demo")
+@Security({"lisi","wangwu"})
 public class DemoController {
 
     @MyAutowired
