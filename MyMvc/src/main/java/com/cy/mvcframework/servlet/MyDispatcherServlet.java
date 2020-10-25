@@ -76,7 +76,7 @@ public class MyDispatcherServlet extends HttpServlet {
                     Parameter parameter = parameters[i];
                     if (parameter.getType() == HttpServletRequest.class || parameter.getType()  == HttpServletResponse.class) {
                         //为httpServletRequest及HttpServletResponse时，存入类型名称，方便后续处理
-                        handler.getParamterIndex().put(parameter.getClass().getSimpleName(), i);
+                        handler.getParamterIndex().put(parameter.getType().getSimpleName(), i);
                     } else {
                         handler.getParamterIndex().put(parameter.getName(), i);
                     }
@@ -129,6 +129,7 @@ public class MyDispatcherServlet extends HttpServlet {
                     continue;
                 }
             }
+            ioc.put(properties.get("interceptor").toString(), Class.forName(properties.get("interceptor").toString()).newInstance());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -182,6 +183,9 @@ public class MyDispatcherServlet extends HttpServlet {
             return;
         }
         if (!chain.applyPreHandle(req,resp)) {
+            req.setAttribute("name", "无权限");
+
+            req.getRequestDispatcher("/index.jsp").forward(req, resp);
             return;
         }
         Handler handler = chain.getHandler();
@@ -199,11 +203,11 @@ public class MyDispatcherServlet extends HttpServlet {
                 }
             }
         }
-        if (indexMap.get(req.getClass().getSimpleName()) != null) {
-            args[indexMap.get(req.getClass().getSimpleName())] = req;
+        if (indexMap.get(HttpServletRequest.class.getSimpleName()) != null) {
+            args[indexMap.get(HttpServletRequest.class.getSimpleName())] = req;
         }
-        if (indexMap.get(resp.getClass().getSimpleName()) != null) {
-            args[indexMap.get(resp.getClass().getSimpleName())] = resp;
+        if (indexMap.get(HttpServletResponse.class.getSimpleName()) != null) {
+            args[indexMap.get(HttpServletResponse.class.getSimpleName())] = resp;
         }
         try {
             method.invoke(handler.getController(), args);
@@ -227,7 +231,7 @@ public class MyDispatcherServlet extends HttpServlet {
         }
         HandlerExecutionChain chain = new HandlerExecutionChain(ha);
         if (ha.getMethod().isAnnotationPresent(Security.class) || ha.getController().getClass().isAnnotationPresent(Security.class)) {
-            chain.addInterceptor((MyInterceptor)ioc.get("com.cy.mvcframework.interceptor.MyInterceptor"));
+            chain.addInterceptor((MyInterceptor)ioc.get(properties.get("interceptor").toString()));
         }
         return chain;
     }

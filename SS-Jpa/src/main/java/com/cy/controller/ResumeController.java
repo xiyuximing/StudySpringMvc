@@ -23,15 +23,22 @@ public class ResumeController {
         return resumeService.qryAll();
     }
 
+    @RequestMapping("/qryById/{id}")
+    @ResponseBody
+    public Resume qryById(@PathVariable(value = "id") Long id) {
+        return  resumeService.qryById(id);
+    }
+
     @RequestMapping("/insertOne")
     @ResponseBody
     public Resume insertOne(Resume resume) {
         return resumeService.insertOne(resume);
     }
 
-    @RequestMapping("/updateOne")
+    @RequestMapping("/updateOne/{id}")
     @ResponseBody
-    public Resume updateOne(Resume resume) {
+    public Resume updateOne(@PathVariable(value = "id") Long id, Resume resume) {
+        resume.setId(id);
         return resumeService.updateOne(resume);
     }
 

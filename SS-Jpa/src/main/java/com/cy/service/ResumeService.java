@@ -13,4 +13,6 @@ public interface ResumeService {
     Resume updateOne(Resume resume);
 
     void deleteOne(Long id);
+
+    Resume qryById(Long id);
 }

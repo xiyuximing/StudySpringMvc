@@ -18,7 +18,7 @@ public class Resume {
     @Column(name = "address")
     private String address;
 
-    @Column(name = "true")
+    @Column(name = "phone")
     private String phone;
 
     public Long getId() {

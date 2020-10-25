@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-@MyService
 public class MySecurityInterceptor implements MyInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Handler handler) {

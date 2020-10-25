@@ -23,4 +23,5 @@
             <bean class="com.cy.intercept.PsmIntercept"/>
         </mvc:interceptor>
     </mvc:interceptors>
+    <mvc:resources mapping="/resources/**" location="WEB-INF/js/,WEB-INF/css/" />
 </beans>

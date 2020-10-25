@@ -11,15 +11,22 @@ import javax.servlet.http.HttpServletResponse;
 
 @MyController
 @MyRequestMapping("/demo")
-@Security({"lisi","wangwu"})
 public class DemoController {
 
     @MyAutowired
     private IDemoService demoService;
 
     @MyRequestMapping("/query")
-    public String query(HttpServletRequest request, HttpServletResponse response, String name) {
-        return demoService.get(name);
+    @Security({"lisi","wangwu"})
+    public void query(HttpServletRequest request, HttpServletResponse response, String username) {
+        try {
+
+            request.setAttribute("name", username);
+            request.getRequestDispatcher("/index.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 

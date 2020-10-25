@@ -630,4 +630,162 @@ public class GlobalExceptionResolver {
    }
    ```
 
+## 手写SpringMVC
+
+### 主要流程
+
+![image-20201021231042614](https://gitee.com/xiyuximing/image/raw/master/image-20201021231042614.png)
+
+## SpringMVC源码
+
+
+
+## SSM框架整合
+
+1. 引入jar包
+
+   pom.xml
+
+   ```xml
+   <dependency>
+     <groupId>org.mybatis</groupId>
+     <artifactId>mybatis-spring</artifactId>
+     <version>2.0.3</version>
+   </dependency>
+   ```
+
    
+
+2. 配置Spring和mybatis整合
+
+   applicationContext.xml
+
+   ``` xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <beans xmlns="http://www.springframework.org/schema/beans"
+          xmlns:context="http://www.springframework.org/schema/context"
+          xmlns:tx="http://www.springframework.org/schema/tx"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www.springframework.org/schema/beans
+                              http://www.springframework.org/schema/beans/spring-beans.xsd
+                              http://www.springframework.org/schema/context
+                              http://www.springframework.org/schema/context/spring-context.xsd
+                              http://www.springframework.org/schema/tx
+                              http://www.springframework.org/schema/tx/spring-tx.xsd
+   ">
+     <!--包扫描-->
+     <context:component-scan base-package="com.cy.edu.mapper"/>
+     <context:component-scan base-package="com.cy.edu.service"/>
+     <!--数据库连接池以及事务管理都交给Spring容器来完成-->
+     <!--引⼊外部资源⽂件-->
+     <context:property-placeholder location="classpath:jdbc.properties"/>
+     <!--第三⽅jar中的bean定义在xml中-->
+     <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+       <property name="driverClassName" value="${jdbc.driver}"/>
+       <property name="url" value="${jdbc.url}"/>
+       <property name="username" value="${jdbc.username}"/>
+       <property name="password" value="${jdbc.password}"/>
+     </bean>
+     <!--SqlSessionFactory对象应该放到Spring容器中作为单例对象管理
+     原来mybaits中sqlSessionFactory的构建是需要素材的：SqlMapConfig.xml中的内
+     容
+     -->
+     <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+       <!--别名映射扫描-->
+       <property name="typeAliasesPackage" value="com.cy.edu.pojo"/>
+       <!--数据源dataSource-->
+       <property name="dataSource" ref="dataSource"/>
+     </bean>
+     <!--Mapper动态代理对象交给Spring管理，我们从Spring容器中直接获得Mapper的代理对
+     象-->
+     <!--扫描mapper接⼝，⽣成代理对象，⽣成的代理对象会存储在ioc容器中-->
+     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+       <!--mapper接⼝包路径配置-->
+       <property name="basePackage" value="com.cy.edu.mapper"/>
+       <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+     </bean>
+     <!--事务管理-->
+     <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+   		<property name="dataSource" ref="dataSource"/>
+   	</bean>
+     <!--事务管理注解驱动-->
+   	<tx:annotation-driven transaction-manager="transactionManager"/>
+   </beans>
+   ```
+
+   web.xml
+
+   ``` xml
+   <context-param>
+     <param-name>contextConfigLocation</param-name>
+     <param-value>classpath*:applicationContext*.xml</param-value>
+   </context-param>
+   <!--spring框架启动-->
+   <listener>
+   	<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+   </listener>
+   ```
+
+3. SpringMVC
+
+   springmvc.xml
+
+   ``` xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <beans xmlns="http://www.springframework.org/schema/beans"
+          xmlns:context="http://www.springframework.org/schema/context"
+          xmlns:mvc="http://www.springframework.org/schema/mvc"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www.springframework.org/schema/beans
+                              http://www.springframework.org/schema/beans/spring-beans.xsd
+                              http://www.springframework.org/schema/context
+                              http://www.springframework.org/schema/context/springcontext.xsd
+                              http://www.springframework.org/schema/mvc
+                              http://www.springframework.org/schema/mvc/spring-mvc.xsd
+   ">
+     <!--扫描controller-->
+     <context:component-scan base-package="com.lagou.edu.controller"/>
+     <mvc:annotation-driven/>
+   </beans>
+   ```
+
+   web.xml
+
+   ``` xml
+   <!--springmvc启动-->
+   <servlet>
+   	<servlet-name>springmvc</servlet-name>
+   	<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+     <init-param>
+       <param-name>contextConfigLocation</param-name>
+       <param-value>classpath*:springmvc.xml</param-value>
+     </init-param>
+   	<load-on-startup>1</load-on-startup>
+   </servlet>
+   <servlet-mapping>
+     <servlet-name>springmvc</servlet-name>
+     <url-pattern>/</url-pattern>
+   </servlet-mapping>
+   ```
+
+#### 特别注意：
+
+Spring容器和SpringMVC容器是有层次的，Spring容器：service对象+dao对象，SpringMVC容器：controller对象，可以引用到Spring容器中的对象
+
+
+
+## SpringDataJpa
+
+### SpringDataJpa概述
+
+​	Spring Data JPA 是 Spring 基于JPA 规范的基础上封装的⼀套 JPA 应⽤框架，可使开发者⽤极简的代码即可实现对数据库的访问和操作。它提供了包括增删改查等在内的常⽤功能！学习并使⽤Spring Data JPA 可以极⼤提⾼开发效率。
+说明：Spring Data JPA 极⼤简化了数据访问层代码。
+如何简化呢？使⽤了Spring Data JPA，我们Dao层中只需要写接⼝，不需要写实现类，就⾃动具有了增删改查、分⻚查询等⽅法。
+使⽤Spring Data JPA 很多场景下不需要我们⾃⼰写sql语句
+
+### SpringDataJpa、JPA规范、Hibernate之间的关系
+
+
+
+### SpringDataJpa应用
+
