@@ -9,11 +9,15 @@ $(function () {
 function qryAll() {
     console.log("-------------s------${APP_PATH}--------" + path);
     $.ajax({
-        url: path + "/qryAll",
+        url: path + "/resume/qryAll",
         type: "GET",
         success: function (result) {
-            console.log(result);
-            build_resume_table(result);
+            if (result == "error") {
+                $(location).attr('href', 'index.jsp');
+            } else {
+                console.log(result);
+                build_resume_table(result);
+            }
         }
     })
 }
@@ -23,7 +27,7 @@ function build_resume_table(result) {
     $("#resume_table tbody").empty();
     //重置全选按钮状态
     $("#check_all").prop("checked",false);
-    var emps = result.data.pageInfo.list;
+    var emps = result;
     $.each(emps, function (index, item) {
         var checkBoxId = $("<td><input type='checkbox' class='check_item'/></td>");
         var id = $("<td></td>").append(item.id);
@@ -52,7 +56,6 @@ function build_resume_table(result) {
 
 function showAddResumeDialog() {
     reset_form("#resumeAddModal form");
-    getDepts("#resumeAddModal select");
     $("#resumeAddModal").modal({
         backdrop: "static"
     })
@@ -69,14 +72,12 @@ function reset_form(ele) {
 function saveEmployee() {
 
     $.ajax({
-        url: path + "/insertOne",
+        url: path + "/resume/insertOne",
         type: "POST",
         data: $("#resumeAddModal form").serialize(),
         success: function (result) {
-            if (200 == result.code) {
-                $("#resumeAddModal").modal("hide");
-                qryAll();
-            }
+            $("#resumeAddModal").modal("hide");
+            qryAll();
         }
     })
 }
@@ -85,7 +86,6 @@ function saveEmployee() {
 //编辑按钮点击
 $(document).on("click", ".edit_btn", function () {
 
-    getDepts("#resumeUpdateModal select");
     getResume($(this).attr("edit_id"));
 
     $("#resumeUpdateModal").modal({
@@ -95,17 +95,15 @@ $(document).on("click", ".edit_btn", function () {
 
 function getResume(id) {
     $.ajax({
-        url: path + "/qryById" + id,
+        url: path + "/resume/qryById/" + id,
         type: "POST",
         success: function (result) {
-            if (result.code == 200) {
-                var data = result.data;
-                $("#address_update_static").text(data.address);
+                var data = result;
+                $("#address_update_static").val(data.address);
                 $("#name_update_static").val(data.name);
                 $("#phone_update_static").val(data.phone);
-                $("#dId").val(data.dId);
-                $("#resume_update_btn").attr("edit_resume_id", data.dId);
-            }
+                $("#dId").val(data.id);
+                $("#resume_update_btn").attr("edit_resume_id", data.id);
         }
     })
 }
@@ -115,14 +113,12 @@ function getResume(id) {
 $("#resume_update_btn").click(function () {
 
     $.ajax({
-        url: path + "/updateOne/" + $(this).attr("edit_resume_id"),
+        url: path + "/resume/updateOne/" + $(this).attr("edit_resume_id"),
         data: $("#resumeUpdateModal form").serialize(),
         type: "PUT",
         success: function (result) {
-            if (200 == result.code) {
-                $("#resumeUpdateModal").modal("hide");
-                qryAll(currentPage);
-            }
+            $("#resumeUpdateModal").modal("hide");
+            qryAll();
         }
     })
 });
@@ -135,10 +131,9 @@ $(document).on("click", ".delete_btn", function () {
     var name = $(this).attr("del_resune_name");
     if (confirm("确认删除" + name + "吗？")) {
         $.ajax({
-            url: path + "/deleteOne/" + id,
+            url: path + "/resume/deleteOne/" + id,
             type: "GET",
             success: function (result) {
-                alert(result.msg);
                 qryAll();
             }
         })

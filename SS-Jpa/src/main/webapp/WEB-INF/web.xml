@@ -18,8 +18,17 @@
       <param-value>UTF-8</param-value>
     </init-param>
   </filter>
+  <!--配置SpringMVC，解析PUT/DELETE的表单数据放入request-->
+  <filter>
+    <filter-name>HttpPutFormContentFilter</filter-name>
+    <filter-class>org.springframework.web.filter.FormContentFilter</filter-class>
+  </filter>
   <filter-mapping>
     <filter-name>encoding</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>HttpPutFormContentFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
 

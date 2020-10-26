@@ -11,13 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 
 @MyController
 @MyRequestMapping("/demo")
+@Security({"lisi","wangwu"})
 public class DemoController {
 
     @MyAutowired
     private IDemoService demoService;
 
     @MyRequestMapping("/query")
-    @Security({"lisi","wangwu"})
     public void query(HttpServletRequest request, HttpServletResponse response, String username) {
         try {
 

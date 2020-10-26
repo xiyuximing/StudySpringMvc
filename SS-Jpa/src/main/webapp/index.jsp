@@ -1,4 +1,5 @@
 <%@ page language="java" isELIgnored="false" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -74,24 +75,22 @@
                     return;
                 }
 
+                var url = '/login?username=' + username + '&password=' + password;
                 $.ajax({
-                    url:'/login',
+                    url:'/login?username=' + username + '&password=' + password,
                     type:'POST',    //GET
                     async:false,    //或false,是否异步
-                    data:{
-                        username:username.split(' ')[1],
-                        password:password.split(' ')[1]
-                    },
                     timeout:5000,    //超时时间
-                    dataType:'json', //返回的数据格式：json/xml/html/script/jsonp/text
                     success:function(data){
-                        if("200" == data.status){
-                            alert("登陆成功~~~");
+                        if("200" == data){
+                           // window.location.href = "list.jsp";
+                            $(location).attr('href', 'list.jsp');
                         }else{
-                            alert("登陆失败~~~,message:" + data.message);
+                            alert("登陆失败~~~,message:" + data);
                         }
                     }
                 })
+
             })
         })
     </script>
@@ -115,7 +114,7 @@
         </tr>
         <tr align="center">
             <td colspan="2">
-                <a href="javasrcipt:void(0)" class="submitBtn"><span>登陆</span></a>
+                <a class="submitBtn"><span>登陆</span></a>
             </td>
         </tr>
     </table>

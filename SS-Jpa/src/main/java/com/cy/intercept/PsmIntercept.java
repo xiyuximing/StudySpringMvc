@@ -17,7 +17,7 @@ public class PsmIntercept implements HandlerInterceptor {
         if (token != null) {
             return true;
         }
-        response.sendRedirect("/login.jsp");
+        response.getWriter().write("error");
         return false;
     }
 

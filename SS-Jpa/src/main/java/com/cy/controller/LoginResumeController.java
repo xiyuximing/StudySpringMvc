@@ -18,7 +18,7 @@ public class LoginResumeController {
             request.getSession().setAttribute("token", "token");
            return 200;
         } else {
-            return 303;
+            return 300;
         }
     }
 }
